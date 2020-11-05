@@ -4,7 +4,6 @@
 namespace List {
 	template <class T>
 	class List {
-		template <class T2> friend class Iterator;
 	private:
 		template <class T1>
 		class Node {
@@ -27,46 +26,44 @@ namespace List {
 	public:
 		List() { this->head = nullptr; this->size = 0; this->tail = nullptr; }
 		~List() { Delete(); }
+		class Iterator {
+		private:
+			List<T>::Node<T>* element;
+		public:
+			Iterator() { this->element = nullptr; }
+			Iterator(Node<T>* node) { this->element = node; }
+			~Iterator() { this->element = nullptr; }
+			const T GetValue() const { return this->element->GetValue(); }
+			void Next() { this->element = this->element->GetNext(); }
+			void Previous() { this->element = this->element->GetPrevious(); }
+
+			void operator=(List::Iterator other) { this->element = other.element; }
+			void operator++() { this->element = this->element->GetNext(); } //++iterator;
+			void operator++(int) { ++*this; } //iterator++;
+			void operator--() { Previous(); } //--iterator;
+			void operator--(int) { Previous(); } //iterator++;
+			//bool operator==(const List::Node<T>& node) { return (this->element == node); }
+			bool operator==(const Iterator& other) { return (this->element == other.element); }
+			bool operator!=(const List::Node<T>& node) { return !(this->element == node); }
+			bool operator!=(const Iterator& other) { return !(*this == other); }
+			T operator*() { return this->element->GetValue(); }
+			//T operator->() { return this->element->GetValue(); }
+			//T operator+(int n) { return *(this + n); }
+			//T operator[](int n) { return operator+(n); }
+		};
 		void Delete() { for (Node<T>* aux = this->head; aux != nullptr; aux = this->head) { this->head = aux->GetNext(); delete aux; } this->head = nullptr; this->tail = nullptr; }
 		void Include(T value);
-		void push_back(T value);
+		void IncludeBack(T value);
 		void Remove(T value);
 		int GetSize() const { return this->size; }
-		Node<T>* GetHead() const { return this->head; }
-		Node<T>* GetFront() const { return this->head; }
-		Node<T>* GetBack() const { return this->tail; }
-		//friend bool operator!=(Iterator<T>& iterator, Node<T>& node);
-	};
+		T Front() const { return this->head->GetValue(); }
+		T Back() const { return this->tail->GetValue(); }
+		List::Iterator Begin() { return Iterator(this->head); }
+		List::Iterator End() { return Iterator(this->tail); }
 
-	template <class T2>
-	class Iterator {
-	private:
-		List<T2>::Node<T2>* iterator;
-		List<T2>* list;
-	public:
-		Iterator(List<T2>* list = nullptr) { this->list = list; this->iterator = nullptr; }
-		~Iterator() { this->iterator = nullptr; this->list = nullptr; }
-		void SetIteratorHead() { this->iterator = this->list->GetHead(); }
-		void SetList(List<T2>& list) { this->list = &list; }
-		T2 GetValue() const { return this->iterator->GetValue(); }
-		bool IteratorNull() const { return this->iterator == nullptr ? true : false; }
-		void Next() { this->iterator = this->iterator->GetNext(); }
 
-		void operator=(List<T2>& list) { this->list = &list; }
-		void operator=(List<T2>::Node<T2>* node) { this->iterator = node; }
-		//List::Node<T2>* operator->() const { return this->iterator; }
-		void operator++() { this->iterator = this->iterator->GetNext(); } //++iterator;
-		void operator++(int) { this->iterator = this->iterator->GetNext(); } //iterator++;
-		void operator--() { if(this->iterator->GetPrevious() != nullptr) this->iterator = this->iterator->GetPrevious(); } //--iterator;
-		void operator--(int) { if(this->iterator->GetPrevious() != nullptr) this->iterator = this->iterator->GetPrevious(); }
-		bool operator==(const List::Node<T2>& node) { return (this->iterator == node); }
-		bool operator!=(const List::Node<T2>& node) { return !(this->iterator == node); }
-		//friend bool operator!=(Iterator<T2>& iterator, List::Node<T2>& node);
-
-		void ForEach(void(*ptr)(T2)) { for (SetIteratorHead(); !IteratorNull(); operator++()) { ptr(GetValue()); } }
-		void ForEach(void(*ptr)()) { for (SetIteratorHead(); !IteratorNull(); operator++()) { ptr(); } }
-		List<T2>::Node<T2>* Begin() { return this->list->GetFront(); }
-		List<T2>::Node<T2>* Back() { return this->list->GetBack(); }
+		void ForEach(void(*ptr)(T)) { for (Node<T>* aux = head; aux != nullptr; aux = aux->GetNext()) { ptr(aux->GetValue()); } }
+		void ForEach(void(*ptr)()) { for (Node<T>* aux = head; aux != nullptr; aux = aux->GetNext()) { ptr(); } }
 	};
 
 	template <class T>
@@ -83,7 +80,7 @@ namespace List {
 	}
 
 	template <class T>
-	void List<T>::push_back(T value)
+	void List<T>::IncludeBack(T value)
 	{
 		Node<T>* aux = new Node<T>(value);
 		aux->SetPrevious(this->tail);
@@ -99,7 +96,7 @@ namespace List {
 	void List<T>::Remove(T value)
 	{
 		Node<T>* aux = this->head;
-		for(; aux!=nullptr && aux->GetValue() != value; aux = aux->GetNext()) {}
+		for (; aux != nullptr && aux->GetValue() != value; aux = aux->GetNext()) {}
 		if (aux == nullptr)
 			return;
 		if (aux == this->tail)
@@ -113,12 +110,6 @@ namespace List {
 		this->size--;
 		delete aux;
 	}
-
-	//template<class T>
-	//bool operator!=(Iterator<T>& iterator, Node<T>& node)
-	//{
-		//return !(iterator != node);
-	//}
 }
 
 
